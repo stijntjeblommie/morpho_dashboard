@@ -1,0 +1,45 @@
+{
+  "apiSettings": {
+    "pendleApiBaseUrl": "https://api-v2.pendle.finance/core",
+    "defaultChainId": 1,
+    "rateLimiting": {
+      "delayBetweenRequests": 300,
+      "delayBetweenMarkets": 1000,
+      "delayBetweenBorrowers": 500
+    }
+  },
+  "fileSettings": {
+    "morphoDataFile": "morpho_complete_analysis.json",
+    "outputFile": "pendle_morpho_analysis.json",
+    "summaryFile": "pendle_morpho_summary.json"
+  },
+  "filterCriteria": {
+    "ptTokenIdentifiers": ["PT-", "PT ", "principal token", "pendle"],
+    "minUsdFilter": 100,
+    "maxBorrowersPerMarket": 5
+  },
+  "analysisSettings": {
+    "includeHistoricalData": true,
+    "historicalTimeFrame": "day",
+    "includeBorrowerPositions": true,
+    "includeTransactionHistory": true,
+    "timestampRange": {
+      "daysBack": 30,
+      "useCustomRange": false,
+      "customStart": null,
+      "customEnd": null
+    }
+  },
+  "supportedChains": {
+    "ethereum": 1,
+    "arbitrum": 42161,
+    "bnb": 56,
+    "mantle": 5000
+  },
+  "logging": {
+    "verbose": true,
+    "logApiCalls": true,
+    "logErrors": true,
+    "exportLogs": false
+  }
+}

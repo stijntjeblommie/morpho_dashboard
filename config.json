@@ -1,0 +1,134 @@
+{
+  "external_yields": {
+    "description": "External yield APYs for common DeFi assets - update these regularly",
+    "last_updated": "2024-03-01",
+    "assets": {
+      "WETH": {
+        "apy": 3.2,
+        "source": "Lido Staking",
+        "confidence": "high"
+      },
+      "USDC": {
+        "apy": 4.5,
+        "source": "Lending protocols average (Aave, Compound)",
+        "confidence": "medium"
+      },
+      "USDT": {
+        "apy": 4.2,
+        "source": "Lending protocols average",
+        "confidence": "medium"
+      },
+      "DAI": {
+        "apy": 4.0,
+        "source": "DSR + lending protocols",
+        "confidence": "high"
+      },
+      "wstETH": {
+        "apy": 3.5,
+        "source": "Lido wrapped stETH",
+        "confidence": "high"
+      },
+      "WBTC": {
+        "apy": 1.5,
+        "source": "Limited yield options",
+        "confidence": "low"
+      },
+      "ezETH": {
+        "apy": 4.0,
+        "source": "Renzo restaking protocol",
+        "confidence": "medium"
+      },
+      "weETH": {
+        "apy": 3.8,
+        "source": "EtherFi liquid restaking",
+        "confidence": "medium"
+      },
+      "rETH": {
+        "apy": 3.1,
+        "source": "Rocket Pool staking",
+        "confidence": "high"
+      },
+      "cbETH": {
+        "apy": 3.0,
+        "source": "Coinbase wrapped staked ETH",
+        "confidence": "high"
+      },
+      "stETH": {
+        "apy": 3.2,
+        "source": "Lido staked ETH",
+        "confidence": "high"
+      }
+    },
+    "default_apy": 2.0
+  },
+  "dashboard_settings": {
+    "refresh_interval_minutes": 5,
+    "data_cache_ttl_seconds": 300,
+    "max_historical_days": 90,
+    "default_sort_column": "Net APY Spread (%)",
+    "default_sort_ascending": false,
+    "items_per_page": 50
+  },
+  "color_thresholds": {
+    "high_profit_threshold": 5.0,
+    "moderate_profit_threshold": 0.0,
+    "colors": {
+      "high_profit": "#d4edda",
+      "high_profit_text": "#155724",
+      "moderate_profit": "#fff3cd",
+      "moderate_profit_text": "#856404",
+      "negative_profit": "#f8d7da",
+      "negative_profit_text": "#721c24"
+    }
+  },
+  "pendle_settings": {
+    "pt_token_prefixes": ["PT-", "pt", "PT_"],
+    "highlight_pt_markets": true,
+    "min_pt_apy_difference": 2.0,
+    "pt_expiry_warning_days": 30
+  },
+  "data_sources": {
+    "morpho_api": "https://api.morpho.org/graphql",
+    "pendle_api": "https://api.pendle.finance/core",
+    "defillama_api": "https://yields.llama.fi/pools",
+    "etherscan_base_url": "https://etherscan.io/address/"
+  },
+  "risk_settings": {
+    "min_health_factor_warning": 1.2,
+    "min_pool_size_usd": 100000,
+    "max_utilization_warning": 95.0,
+    "min_liquidity_depth_usd": 50000
+  },
+  "display_settings": {
+    "decimal_places": {
+      "apy": 2,
+      "pool_size": 2,
+      "health_factor": 2,
+      "utilization": 2,
+      "price": 4
+    },
+    "currency_format": "USD",
+    "large_number_format": "M",
+    "show_debug_info": false,
+    "enable_tooltips": true
+  },
+  "alerts": {
+    "enabled": true,
+    "high_opportunity_threshold": 8.0,
+    "risk_warning_enabled": true,
+    "new_market_alerts": false,
+    "price_change_threshold": 10.0
+  },
+  "analytics": {
+    "track_user_interactions": false,
+    "export_formats": ["json", "csv"],
+    "historical_data_points": 100,
+    "performance_monitoring": true
+  },
+  "api_limits": {
+    "morpho_requests_per_minute": 60,
+    "pendle_requests_per_minute": 100,
+    "retry_attempts": 3,
+    "retry_delay_seconds": 2
+  }
+}
