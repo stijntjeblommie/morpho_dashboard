@@ -1054,14 +1054,34 @@ async function run() {
   sheets.morpho_vault_top_depositors = [];
   for (const [va, items] of Object.entries(vaultDepositors)) {
     for (const it of items || []) {
-      sheets.morpho_vault_top_depositors.push({
-        vaultAddress: va,
-        userAddress: it?.user?.address,
-        assetsUsd: it?.state?.assetsUsd,
-        userTransactions: it?.user?.transactions || [],
-      });
-    }
+      const allTransactions = it?.user?.transactions || [];
+
+      // Helper function to safely extract the USD value from different transaction types
+      const extractAssetsUsd = (tx) => {
+        if (!tx.data) return 0;
+        return parseFloat(
+          tx.data.assetsUsd || 
+          tx.data.repaidAssetsUsd || 
+          0
+        );
+      };
+
+    // Sort transactions by their USD value in descending order
+    const sortedTransactions = allTransactions.sort((a, b) => {
+      return extractAssetsUsd(b) - extractAssetsUsd(a);
+    });
+
+    // Keep only the top 5 transactions
+    const top5Transactions = sortedTransactions.slice(0, 5);
+
+    sheets.morpho_vault_top_depositors.push({
+      vaultAddress: va,
+      userAddress: it?.user?.address,
+      assetsUsd: it?.state?.assetsUsd,
+      userTransactions: top5Transactions, // Use the trimmed list
+    });
   }
+}
 
   // 7) Pendle mapping/match summary
   sheets.pendle_pt_matches = [];
