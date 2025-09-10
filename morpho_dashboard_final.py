@@ -832,84 +832,94 @@ def create_depositor_sankey(depositors_df: pd.DataFrame, vault_info: Dict) -> go
 # ======================================================
 
 def create_pool_performance_chart(sheets: Dict[str, pd.DataFrame], pool_key: str) -> go.Figure:
-    """Create line chart with dual Y-axes for comparing historical APY data."""
+    """
+    Creates a single-axis line chart with a custom hybrid linear-log scale,
+    displaying only the two APY lines.
+    """
     
-    # MODIFICATION 1: Initialize the figure with a secondary y-axis
-    fig = make_subplots(specs=[[{"secondary_y": True}]])
+    # Define the threshold for switching scales
+    threshold = 100
+    log_offset = threshold / np.log10(threshold)
+    
+    def hybrid_scale(y):
+        """Maps a value to the hybrid linear-log scale."""
+        return y if y is not None and y <= threshold else np.log10(y) * log_offset if y is not None and y > 0 else None
+
+    # Initialize the figure with a single y-axis
+    fig = go.Figure()
 
     # Get market data
     if 'morpho_markets' not in sheets:
-        st.error("No market data available")
         return fig
 
     markets_df = sheets['morpho_markets']
     market_data = markets_df[markets_df['uniqueKey'] == pool_key]
 
     if market_data.empty:
-        st.error(f"Market {pool_key} not found")
         return fig
 
     market = market_data.iloc[0]
     collateral_symbol = market.get('collateralAsset.symbol', 'Unknown')
     loan_symbol = market.get('loanAsset.symbol', 'Unknown')
 
-    # Parse historical Morpho APY data
-    historical_data_str = market.get('historicalState.dailyNetBorrowApy', '')
-    historical_df = parse_historical_apy_data(historical_data_str)
-
-    # Add Morpho APY trace to the primary (left) y-axis
+    # Parse historical Morpho and Pendle APY data
+    historical_df = parse_historical_apy_data(market.get('historicalState.dailyNetBorrowApy', ''))
+    pendle_df = pd.DataFrame()
+    if is_pt_token(collateral_symbol):
+        pendle_df = get_pendle_yield_data(sheets, pool_key)
+        
+    # Plot the main APY lines
     if not historical_df.empty:
         fig.add_trace(
             go.Scatter(
                 x=historical_df['date'],
-                y=historical_df['apy'],
+                y=historical_df['apy'].apply(hybrid_scale),
                 name='Morpho borrow rate',
                 line=dict(color='#00D2FF', width=2)
-            ),
-            secondary_y=False,
-        )
-
-    # Check if it's a PT token and add Pendle data
-    if is_pt_token(collateral_symbol):
-        pendle_df = get_pendle_yield_data(sheets, pool_key)
-        if not pendle_df.empty:
-            # MODIFICATION 2: Add the Pendle APY trace to the secondary (right) y-axis
-            fig.add_trace(
-                go.Scatter(
-                    x=pendle_df['date'],
-                    y=pendle_df['apy'],
-                    name='Pendle APY',
-                    line=dict(color='#FF6B6B', width=2, dash='dash')
-                ),
-                secondary_y=True, # This is the key change
             )
-        else:
-            st.info(f"PT Token Detected, but no historical Pendle data was found in the CSV.")
-            
-    # Current APY as reference line on the primary axis
+        )
+    if not pendle_df.empty:
+        fig.add_trace(
+            go.Scatter(
+                x=pendle_df['date'],
+                y=pendle_df['apy'].apply(hybrid_scale),
+                name='Pendle APY',
+                line=dict(color='#FF6B6B', width=2, dash='dash')
+            )
+        )
+        
+    # Current APY as a reference line with transformed data
     current_apy = safe_float(market.get('state.netBorrowApy', 0)) * 100
     fig.add_hline(
-        y=current_apy,
+        y=hybrid_scale(current_apy),
         line_dash="dot",
         line_color="red",
-        annotation_text=f"Current Morpho: {current_apy:.2f}%",
-        secondary_y=False
+        annotation_text=f"Current Morpho: {current_apy:.2f}%"
     )
+
+    # Create custom axis labels for the hybrid scale
+    tick_values = [0, 25, 50, 75, 100, 200, 500, 1000, 2000, 5000]
+    tick_labels = [f"{v}%" for v in tick_values]
+    transformed_tick_values = [hybrid_scale(v) for v in tick_values]
     
-    # MODIFICATION 3: Update layout and set titles for both y-axes
+    # Update layout and set titles
     fig.update_layout(
         title_text=f"Historical APY Performance: {collateral_symbol}/{loan_symbol}",
         xaxis_title="Date",
+        yaxis_title="APY (%) (Hybrid Linear-Log Scale)",
         hovermode='x unified',
         height=500,
         legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1)
     )
 
-    # Add titles to each y-axis, colored to match their lines
-    fig.update_yaxes(title_text="<b>Morpho borrow rate (%)</b>", secondary_y=False, color='#00D2FF')
-    fig.update_yaxes(title_text="<b>Pendle APY (%)</b>", secondary_y=True, color='#FF6B6B')
+    # Apply the custom axis labels
+    fig.update_yaxes(
+        tickmode='array',
+        tickvals=transformed_tick_values,
+        ticktext=tick_labels
+    )
 
-    # Add range selector (unchanged)
+    # Add range selector
     fig.update_layout(
         xaxis=dict(
             rangeselector=dict(
